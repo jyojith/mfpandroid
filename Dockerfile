@@ -115,7 +115,7 @@ RUN wget -q -O tools.zip https://dl.google.com/android/repository/sdk-tools-linu
     echo "Install android-18" && \
     tools/bin/sdkmanager "platforms;android-18" && \
     echo "Install android-19" && \
-    tools/bin/sdkmanager "platforms;android-19" && \  && export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
+    tools/bin/sdkmanager "platforms;android-19" && \ 
 
     echo "Install android-20" && \
     tools/bin/sdkmanager "platforms;android-20" && \
