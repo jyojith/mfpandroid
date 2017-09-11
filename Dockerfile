@@ -34,6 +34,7 @@ RUN apt-get update && \
         libxml2-dev \
         m4 \
         ncurses-dev \
+        ocaml \
         openssh-client \
         pkg-config \
         python-software-properties \
@@ -41,32 +42,28 @@ RUN apt-get update && \
         unzip \
         zip \
         zlib1g-dev && \
+    apt-add-repository -y ppa:openjdk-r/ppa && \
+    apt-get install -y openjdk-8-jdk && \
     rm -rf /var/lib/apt/lists/ && \
     apt-get clean
 
-    # Install Java.
-    # add webupd8 repository
-    RUN \
-        echo "===> add webupd8 repository..."  && \
-        echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list  && \
-        echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list  && \
-        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886  && \
-        apt-get update  && \
-        \
-        \
-        echo "===> install Java"  && \
-        echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections  && \
-        echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections  && \
-        DEBIAN_FRONTEND=noninteractive  apt-get install -y --force-yes oracle-java7-installer oracle-java7-set-default \
-        maven && \
-        \
-        echo "===> clean up..."  && \
-        rm -rf /var/cache/oracle-jdk7-installer  && \
-        apt-get clean  && \
-        rm -rf /var/lib/apt/lists/*
 
-    # Define commonly used JAVA_HOME variable
-    ENV JAVA_HOME /usr/lib/jvm/java-7-oracle
+
+# Install Mobile First Platform
+ENV MFP_VERSION 7.0.0
+RUN MFP_URL="https://public.dhe.ibm.com/ibmdl/export/pub/software/products/en/MobileFirstPlatform/mobilefirst_cli_installer_$MFP_VERSION.zip" \
+    && wget -q $MFP_URL -U UA-IBM-WebSphere-Liberty-Docker -O "/tmp/mobilefirst_cli_installer_$MFP_VERSION.zip" \
+    && unzip -q "/tmp/mobilefirst_cli_installer_$MFP_VERSION.zip" -d /tmp/mfp \
+    && unzip -q "/tmp/mfp/mobilefirst-cli-installer-$MFP_VERSION/resources/mobilefirst-cli-$MFP_VERSION-install.zip" -d /opt/ibm \
+    && rm -rf /tmp/mfp* \
+    && cd /opt/ibm/mobilefirst-cli \
+    && npm install
+ENV PATH /opt/ibm/mobilefirst-cli:$PATH
+ENV PATH node_modules/.bin:$PATH
+ENV PATH node_modules/bin:$PATH
+
+# Configure mfp
+COPY mfp /opt/ibm/mobilefirst-cli/mfp
 
     # Install NodeJS
     ENV NODE_VERSION 0.10.29
@@ -115,7 +112,7 @@ RUN wget -q -O tools.zip https://dl.google.com/android/repository/sdk-tools-linu
     echo "Install android-18" && \
     tools/bin/sdkmanager "platforms;android-18" && \
     echo "Install android-19" && \
-    tools/bin/sdkmanager "platforms;android-19" && \ 
+    tools/bin/sdkmanager "platforms;android-19" && \
 
     echo "Install android-20" && \
     tools/bin/sdkmanager "platforms;android-20" && \
